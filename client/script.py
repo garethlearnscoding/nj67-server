@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Usage: cmd.py <command> [<arguments>...]
+Usage: [WORKING_NAME].py <command> [<arguments>...]
 
 <Commands>
   h  help      : Print this help message
@@ -21,7 +21,7 @@ from io import BytesIO
 
 class Env:
     UPLOAD_PATH: Path = Path('ans_booklet')
-    UPLOAD_URI: str = 'http://127.0.0.1:5000'
+    UPLOAD_URI: str = 'http://127.0.0.1:5000/upload'
     DOWNLOAD_URI: str = 'https://github.com/curl/curl/releases/download/curl-8_18_0/curl-8.18.0.zip'
     DOWNLOAD_PATH: str | None = None
 
