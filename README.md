@@ -5,3 +5,5 @@
 H2 Computing Papers!!
 
 Includes script for uploading and updating files for checking
+
+Requirements: Python >= 3.10 (tested with 3.14)
