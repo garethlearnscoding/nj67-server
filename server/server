@@ -47,6 +47,7 @@ def papers_please():
     return redirect('/static/papers.zip')
 
 def get_subtask_from_cell(cell: dict):
+    "Attempt to get the subtask number for the cell, returns 0 if not found"
     try:
         return cell['metadata']["subtask"]
     except KeyError:
@@ -66,11 +67,12 @@ def get_subtask_from_cell(cell: dict):
         head = cell['source'].split('\n')[0]
     except AttributeError:
         head = cell['source'][0]
-    if task_string := re.match(r"task\w*\d+\.(\d+)", head, re.IGNORECASE) is not None:
+    if (task_string := re.match(r"task\w*\d+\.(\d+)", head, re.IGNORECASE)) is not None:
         return int(task_string.group(1))
     return 0
 
 def proc_file(file):
+    "Return list of cells ordered by subtask, will raise Exceptions if missing too much metadata"
     with open(file) as f:
         nb = json.load(f)
     try:
@@ -78,32 +80,32 @@ def proc_file(file):
         task_no = nb['metadata']['nj67']['task_no']
     except KeyError:
         raise NotImplementedError(f"No metadata found in file: {file}")
-    all_cells = [(get_subtask_from_cell(cell), cell) 
+    all_cell_tuples = [(get_subtask_from_cell(cell), cell) 
                     for cell in nb['cells'] if cell['cell_type'] == "code"]
-    i = 1 # expected subtask of cell
+    i = 1 # expected subtask of cell, subtassks are 1-indexed
     ordered_cells = []
-    for cell_index, cell in enumerate(all_cells):
-        if cell[0] == i:
-            ordered_cells.append(cell)
+    for cell_index, cell_tup in enumerate(all_cell_tuples):
+        if cell_tup[0] == i:
+            ordered_cells.append(cell_tup[1])
             i += 1
             continue
         j = 1
         try:
             while True:
-                if all_cells[cell_index + j][0] == i:
+                if all_cell_tuples[cell_index + j][0] == i:
                     print(f"Found extra code cell{'s' if j > 1 else ''} after Task {task_no}.{i-1}, ignoring...", file=sys.stderr)
                     break
-                elif all_cells[cell_index + j][0] == i + j:
-                    ordered_cells.append(cell)
+                elif all_cell_tuples[cell_index + j][0] == i + j:
+                    ordered_cells.append(cell_tup[1])
                     print(f"Found code cell with missing metadata, ignoring...", file=sys.stderr)
                     break
-                elif all_cells[cell_index + j] in range(i, i+j):
+                elif all_cell_tuples[cell_index + j] in range(i, i+j):
                     raise NotImplementedError(f"Found code cell(s) with missing metadata and ambigous ordering")
                 j += 1
             continue
         except IndexError: #End of cells
             if i + j == no_subtask:
-                ordered_cells.extend(all_cells[i:])
+                ordered_cells.extend(all_cell_tuples[i:])
                 print("Found cell(s) with missing metadata until eof, ignoring...")
                 break
             raise NotImplementedError(f"Found code cell(s) with missing metadata and ambigous ordering")
