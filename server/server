@@ -23,13 +23,10 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def get_ans():
-    temp = cwd / f'output/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_{request.remote_addr}.zip'
-    out_dir = temp.with_suffix('')
-    print(request.files.keys())
-    request.files['file'].save(temp)
-    with ZipFile(temp) as zip_ref:
+    # TODO: Add UUID? to each client to differentiate different people
+    out_dir = cwd / f'output/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_{request.remote_addr}'
+    with ZipFile(request.files['file'].stream) as zip_ref:
         zip_ref.extractall(out_dir)
-    temp.unlink()
     contents = tuple(out_dir.iterdir())
     if len(contents) == 1 and contents[0].is_dir():
         try:
