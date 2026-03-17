@@ -60,7 +60,7 @@ def proc_file(file):
                     ordered_cells.append(cell_tup[1])
                     print(f"Found code cell with missing metadata, ignoring...", file=sys.stderr)
                     break
-                elif all_cell_tuples[cell_index + j] in range(i, i+j):
+                elif all_cell_tuples[cell_index + j][0] in range(i, i+j):
                     raise NotImplementedError(f"Found code cell(s) with missing metadata and ambigous ordering")
                 j += 1
             continue
@@ -85,7 +85,7 @@ def add_cell_metadata(file):
     with fp.open() as f:
         nb = json.load(f)
     if (task_no := re.match(r"TASK_?(\d+)", fp.name, re.IGNORECASE)):
-        nb['metadata']['nj67']['task_no'] = task_no.group(1)
+        nb['metadata']['nj67']['task_no'] = int(task_no.group(1))
     try:
         no_subtask = nb['metadata']['nj67']['no_subtask']
     except KeyError:
