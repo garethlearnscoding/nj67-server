@@ -2,13 +2,12 @@
 """
 Script to be run on the server.
 """
+import os
+import uuid
 
 from datetime import datetime
 from pathlib import Path
 from zipfile import ZipFile
-
-import os
-import uuid
 
 from flask import Flask, redirect, request, send_from_directory, session
 
