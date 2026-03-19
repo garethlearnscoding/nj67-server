@@ -1,0 +1,31 @@
+/* 
+Note: Comments are not a feature in regular json
+*/
+{
+	"metadata": {
+		"nj67": { // Notebook metadata is REQUIRED
+			"paper": "[paper]", //Name of paper
+			"task": 1, //Task number
+			"no_subtask": 4 //Number of subtasks in document
+		},
+		// ...
+	},
+	"cells": [
+		{
+			"cell_type": "code",
+			"metadata": {
+				"nj67": {
+					"subtask": 1 // primary subtask check
+				},
+				"tags": [
+					"task 1.1" // secondary subtask check
+				]
+			},
+			"source": [
+				"# Task 1.1", // tertiary subtask check
+				// ...
+			]
+		}
+	],
+	// ...
+}

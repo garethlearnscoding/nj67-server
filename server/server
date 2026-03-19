@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+"""
+Script to be run on the server.
+"""
+import os
+import uuid
+
+from datetime import datetime
+from pathlib import Path
+from zipfile import ZipFile
+
+from flask import Flask, redirect, request, send_from_directory, session
+
+app = Flask(__name__)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", uuid.uuid4().hex)
+
+cwd = Path(__file__).parent
+(cwd / 'output').mkdir(exist_ok=True)
+
+def create_if_not_exists_session():
+    if 'user_id' not in session:
+        session['user_id'] = str(uuid.uuid4())
+
+@app.route('/')
+def index():
+    create_if_not_exists_session()
+    return send_from_directory(Path(__file__).parent / 'static', 'index.html')
+
+@app.route('/upload', methods=['POST'])
+def get_ans():
+    create_if_not_exists_session()
+    out_dir = cwd / f'output/{session['user_id']}/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}'
+    out_dir.mkdir(parents=True, exist_ok=True)
+    with ZipFile(request.files['file'].stream) as zip_ref:
+        zip_ref.extractall(out_dir)
+    contents = tuple(out_dir.iterdir())
+    if len(contents) == 1 and contents[0].is_dir():
+        try:
+            for child in contents[0].iterdir():
+                child.rename(out_dir / child.name)
+            contents[0].rmdir()
+        except OSError: 
+            return "Error: invalid zip file", 500
+    return 'ok', 200
+
+@app.route('/download', methods=['GET'])
+def papers_please():
+    if request.args:
+        pass #TODO
+    return redirect('/static/papers.zip')
+
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", debug=True)

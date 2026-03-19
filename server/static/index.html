@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <title>Upload files to NJ67</title>
+    <link rel="stylesheet" href="/static/index.css">
+</head>
+<body>
+    <h1>Upload zip file to NJ67</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data" id="file-form" aria-required="true" required onsubmit="return check_if_file_exists()">
+        <label id="drop-zone">Drop zip file here, or click to upload.
+            <input type="file" name="file" id="file-input" accept="application/zip">
+        </label>
+        <p id="filename-display"></p>
+        <button id="clear-btn" type="button">Clear</button>
+        <button id="submit" type="submit">Upload</button>
+    </form>
+    <script src="/static/index.js"></script>
+</body>
