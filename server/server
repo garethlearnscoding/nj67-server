@@ -12,23 +12,26 @@ from zipfile import ZipFile
 from flask import Flask, redirect, request, send_from_directory, session
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", uuid.uuid4().hex)
+# 
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", '')
+if not app.secret_key:
+    print("PLEASE set FLASK_SECRET_KEY environment variable so that user_id will not change with every server restart")
+    app.secret_key = uuid.uuid4().hex
 
 cwd = Path(__file__).parent
 (cwd / 'output').mkdir(exist_ok=True)
 
+@app.before_request
 def create_if_not_exists_session():
     if 'user_id' not in session:
         session['user_id'] = str(uuid.uuid4())
 
 @app.route('/')
 def index():
-    create_if_not_exists_session()
     return send_from_directory(Path(__file__).parent / 'static', 'index.html')
 
 @app.route('/upload', methods=['POST'])
 def get_ans():
-    create_if_not_exists_session()
     out_dir = cwd / f'output/{session['user_id']}/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}'
     out_dir.mkdir(parents=True, exist_ok=True)
     with ZipFile(request.files['file'].stream) as zip_ref:
