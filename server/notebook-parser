@@ -2,6 +2,7 @@
 """
 Collection of functions to parse ipynb
 """
+import hashlib
 import json
 import re
 import sys
@@ -74,7 +75,7 @@ def proc_file(file):
             raise NotImplementedError(f"Found code cell(s) with missing metadata and ambigous ordering")
     return ordered_cells
 
-def add_cell_metadata(file):
+def add_notebook_metadata(file):
     """
     Add metadata of subtask number to code cells and task number to notebook itself
     
@@ -85,12 +86,13 @@ def add_cell_metadata(file):
     fp = Path(file)
     with fp.open() as f:
         nb = json.load(f)
-    if (task_no := re.match(r"TASK_?(\d+)", fp.name, re.IGNORECASE)):
-        nb['metadata']['nj67']['task_no'] = int(task_no.group(1))
-    try:
-        no_subtask = nb['metadata']['nj67']['no_subtask']
-    except KeyError:
-        raise NotImplementedError("Unable to find task number from file name or metadata")
+    if (filename_match := re.match(r"^(.*?)_?TASK_?(\d+)", fp.stem, re.IGNORECASE)):
+        nb['metadata']['nj67']['paper'] = filename_match.group(1)
+        task_no = int(filename_match.group(2))
+        nb['metadata']['nj67']['task_no'] = task_no
+    else:
+        raise NotImplementedError("Unable to find paper name and task number from file name or metadata")
+    nb['metadata']['nj67']['hash'] = hashlib.md5(fp.stem.encode()).hexdigest()
     i = 1
     for cell in nb['cells']: 
         if cell['cell_type'] != "code":
@@ -98,12 +100,12 @@ def add_cell_metadata(file):
         if 'metadata' not in cell:
             cell['metadata'] = {}
         cell['metadata']['nj67'] = {"subtask": i}
-        cell['metadata']['tags'] = [f"task {no_subtask}.{i}"] + cell['metadata'].get('tags', [])
-        cell['source'] = [f"# Task {no_subtask}.{i}", "# YOUR CODE HERE"]
+        cell['metadata']['tags'] = [f"task {task_no}.{i}"] + cell['metadata'].get('tags', [])
+        cell['source'] = [f"# Task {task_no}.{i}", "# YOUR CODE HERE"]
         i += 1
-    
+    nb['metadata']['nj67']['no_subtask'] = i
     with fp.with_stem(fp.stem + '_processed').open('w') as f:
         json.dump(nb, f, indent=2)
 
-# add_cell_metadata("task_67.ipynb")
+# add_notebook_metadata("task_67.ipynb")
 # print(*proc_file("task_67_processed.ipynb"),sep='\n\n')
