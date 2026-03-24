@@ -64,10 +64,17 @@ def view_uploads():
     uploads = output_dir / session['user_id']
     if not uploads.exists():
         return "File not found", 404
+    if request.args.get('list', False, bool):
+        return [a.name for a in uploads.iterdir()], 200
     return render_template('view_files.html.jinja',
         title="Uploaded files by timestamp",
         files=list(map(lambda a: a.name, uploads.iterdir())))
-app.add_url_rule('/view', view_func=lambda:redirect('/view/'))
+@app.route('/view')
+def view():
+    if request.args.get('list', False, bool):
+        uploads = output_dir / session['user_id']
+        return [a.name for a in uploads.iterdir()], 200
+    return redirect('/view/')
 
 @app.route('/view/<path:path>/', methods=['GET'])
 def view_files(**kwargs):
