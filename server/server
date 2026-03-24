@@ -20,7 +20,7 @@ if not app.secret_key:
 else:
     print("Flask secret key found in env variable FLASK_SECRET_KEY")
 
-cwd = Path(__file__).parent
+cwd = Path(app.root_path)
 output_dir = cwd / 'output'
 output_dir.mkdir(exist_ok=True)
 
@@ -31,7 +31,11 @@ def create_if_not_exists_session():
 
 @app.route('/')
 def index():
-    return send_from_directory(Path(__file__).parent / 'static', 'index.html')
+    return send_from_directory(cwd / 'static', 'index.html')
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(cwd / 'static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route('/upload', methods=['POST'])
 def get_ans():
