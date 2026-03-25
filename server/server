@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from zipfile import ZipFile
 
-import werkzeug
+from werkzeug.security import safe_join
 from flask import Flask, redirect, render_template, request, send_file, send_from_directory, session, url_for
 
 app = Flask(__name__)
@@ -78,9 +78,8 @@ def view():
 
 @app.route('/view/<path:path>/', methods=['GET'])
 def view_files(**kwargs):
-    print(kwargs['path'])
-    path = Path(werkzeug.security.safe_join(output_dir / session['user_id'], kwargs['path']))
-    if not path or not path.exists():
+    path = safe_join(output_dir / session['user_id'], kwargs['path'])
+    if path is None or not ( path := Path(path) ).exists():
         return "File not found", 404
     if path.is_dir():
         return render_template(
