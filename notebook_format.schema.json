@@ -1,0 +1,82 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Notebook metadata format schema",
+	"description": "Schema for the location of nj67 cell and notebook metadata that will be used in .ipynb files",
+	"$id": "nj67-metadata-schema",
+	"type": "object",
+	"required": ["metadata"],
+	"properties": {
+		"metadata": {
+			"type":"object",
+			"required": ["nj67"],
+			"properties": {
+				"nj67": { 
+					"$comment": "Notebook metadata is REQUIRED",
+					"required": ["paper", "hash", "task_no", "no_subtask"],
+					"properties": {
+						"paper": {
+							"$comment": "Name of paper",
+							"type": "string"
+						},
+						"hash": {
+							"$comment": "MD5 hash of the paper name, used to compare document's existance",
+							"type": "string",
+							"maxLength": 32,
+							"minLength": 32
+						},
+						"task_no": {
+							"$comment": "Task number",
+							"type": "integer",
+							"minimum": 1
+						},
+						"no_subtask": {
+							"$comment": "Number of subtasks in document",
+							"type": "integer",
+							"minimum": 1
+						}
+					}
+				}
+			}
+		},
+		"cells": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"cell_type": {
+						"$comment": "Can be either markdown, code or raw",
+						"type": "string"
+					},
+					"metadata": {
+						"type": "object",
+						"properties": {
+							"nj67": {
+								"type": "object",
+								"required": ["subtask"],
+								"properties": {
+									"subtask": {
+										"$comment": "Primary check for subtask",
+										"type": "integer",
+										"minimum": 1
+									}
+								}
+							},
+							"tags": {
+								"type": "array",
+								"items": { 
+									"$comment": "Secondary subtask check, appears in notebook cell e.g. 'task 1.1'",
+									"type": "string",
+									"pattern": "(?i)^task[-_\\s]?\\d+\\.\\d+$"
+								}
+							}
+						}
+					},
+					"source": {
+						"$comment": "Tertiary subtask check, 'source' should start with comment of task no, e.g. #Task 1.1",
+						"type": ["array", "string"]
+					}
+				}
+			}
+		}
+	}
+}
