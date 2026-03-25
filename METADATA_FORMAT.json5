@@ -6,7 +6,7 @@ Note: Comments are not a feature in regular json
 		"nj67": { // Notebook metadata is REQUIRED
 			"paper": "[paper]", //Name of paper
 			"hash": "[hash]", //MD5 hash of the paper name, used to compare document's existance
-			"task": 1, //Task number
+			"task_no": 1, //Task number
 			"no_subtask": 4 //Number of subtasks in document
 		},
 		// ...
