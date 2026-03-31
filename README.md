@@ -8,6 +8,10 @@ Includes script for uploading and updating files for checking
 
 Requirements: Python >= 3.10 (tested with 3.14)
 
+## Client program
+
+Client program can be found [here](https://github.com/ffgtfgh53/nj67-client)
+
 ## Testcases
 
 Testcases are not to be run using the file itself, rather to be run using unittest in testcases directory
