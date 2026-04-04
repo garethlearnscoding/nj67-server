@@ -44,3 +44,8 @@ python -m unittest -v
 The testcases assume that the neccessary code is present in `taskfile_n` where n is the task number.
 
 The code must also be wrapped in a function or class that the testcase can import and run.
+
+<!--
+Honestly this README.md is here just so i don't forget
+Documentation for me lmao
+-->
