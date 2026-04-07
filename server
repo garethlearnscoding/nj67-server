@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """\
 Webserver for users to be able to upload the files via the CLI or webpage.
 """
