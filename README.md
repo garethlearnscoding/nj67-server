@@ -60,7 +60,12 @@ The testcases assume that the neccessary code is present in `taskfile_n` where n
 
 The code must also be wrapped in a function or class that the testcase can import and run.
 
+### ATTENTION
+
+While there is some minimal patching of user code (meaning no exec() and other functions), it DOES NOT apply to loose code at the cell level which when collected into a single file, WILL BE RUN when importing a function from the same file. I have yet to re-wrap the entire code cell in another function to prevent this loose code, so this warning (meant for me or whoever this may concern (also me)) will stay here until this is resolved
+
 <!--
 Honestly this README.md is here just so i don't forget
 Documentation for me lmao
+Documnting all this things i need to do lmao
 -->
