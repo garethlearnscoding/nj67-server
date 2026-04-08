@@ -1,19 +1,34 @@
 #!/bin/env python3
+from typing import TYPE_CHECKING
 import unittest
-import traceback
-from pprint import pprint
 
-if __name__ == "__main__":
+if TYPE_CHECKING:
+    # For the type checkers :)
+    from _typeshed import OptExcInfo
+
+class CustomTestResult(unittest.TestResult):
+    def __init__(self):
+        super().__init__()
+        self.fails: list[tuple[unittest.TestCase, OptExcInfo]] = [] 
+        self.errs: list[tuple[unittest.TestCase, OptExcInfo]] = []
+    
+    def addFailure(self, test, err):
+        super().addFailure(test, err)
+        self.fails.append((test, err))
+    
+    def addError(self, test, err):
+        super().addError(test, err)
+        self.errs.append((test, err))
+
+if __name__ == "__main__": # Neccessary or no?
     tests = unittest.TestLoader().discover(top_level_dir="nj67-papers/testcases", start_dir="nj67-papers/testcases")
-    runner = unittest.TextTestRunner()
-    res = unittest.TestResult()
-    res = tests.run(res)
+    # debug=False instead of try/except so that all errors can be accumulated instead of fail fast on first exception
+    # tests.run() outputs the same type that was passed in (i.e. same object, just with functions called)
+    res: CustomTestResult = tests.run(CustomTestResult(), debug=False) #type: ignore
     if res.wasSuccessful():
         print("OK, no problem boss")
     else:
-        failures = []
-        for test_class, _stdoutput in res.failures:
-            try:
-                test_class.debug()
-            except Exception as e:
-                print(f"{e.__traceback__.tb_frame.f_locals['test_class'].__class__.__name__}: {str(e)}")
+        for testcase, err in res.fails:
+            print(f"{testcase.__class__.__name__}: {err[1]}")
+        for testcase, err in res.errs:
+            print(f"Internal error in {testcase}: {err[1]}")

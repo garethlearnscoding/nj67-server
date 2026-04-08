@@ -6,7 +6,22 @@ H2 Computing Papers!!
 
 This is the server for nj67, the client can be found [here](https://github.com/ffgtfgh53/nj67-client).
 
-Requirements: Python >= 3.10 (Tested with 3.14 on Linux), no external dependencies
+## Requirements: 
+Python >= 3.14 on UNIX
+
+Dependencies: 
+* flask >= 3.0
+* (optional) jupyterlab/notebook for ipynb support (only to use the notebook yourself, not required for server)
+
+Might possibly support:
+* Python >= 3.8
+* Windows systems
+* Other non-UNIX systems
+
+No support for:
+* Python < 3.8 (no type annotations and no flask support)
+
+Mainly tested on Python 3.14 on Linux. <!--𝜋thon amirite-->
 
 ## Cloning
 
