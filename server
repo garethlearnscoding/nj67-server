@@ -2,9 +2,12 @@
 """\
 Webserver for users to be able to upload the files via the CLI or webpage.
 """
+import logging
 import os
 import uuid
+import warnings
 
+from _colorize import ANSIColors
 from datetime import datetime
 from pathlib import Path
 from zipfile import ZipFile
@@ -12,13 +15,19 @@ from zipfile import ZipFile
 from werkzeug.security import safe_join
 from flask import Flask, redirect, render_template, request, send_file, send_from_directory, session, url_for
 
+DEBUG = True
+
+logging.basicConfig(format="%(message)s", level=logging.DEBUG if DEBUG else None)
+logging.captureWarnings(True)
+warnings.formatwarning = lambda message, *args, **kwargs: f'{ANSIColors.RED}{ANSIColors.BOLD}WARNING: {message}{ANSIColors.RESET}'
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", '')
 if not app.secret_key:
-    print("PLEASE set FLASK_SECRET_KEY environment variable so that user_id will not change with every server restart")
+    warnings.warn("Please set FLASK_SECRET_KEY environment variable so that user_id will not change with every server restart")
     app.secret_key = uuid.uuid4().hex
 else:
-    print("Flask secret key found in env variable FLASK_SECRET_KEY")
+    logging.info("Flask secret key found in env variable FLASK_SECRET_KEY")
 
 cwd = Path(app.root_path)
 output_dir = cwd / 'output'
@@ -96,4 +105,4 @@ def redirect_view_files(**kwargs):
     return redirect(url_for('view_files', **kwargs))
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", debug=True)
+    app.run(host="0.0.0.0", debug=DEBUG)
