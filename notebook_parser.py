@@ -118,7 +118,25 @@ def add_notebook_metadata(filepath: Any, output_path:Any=None):
         print(f"Invalid output path: ", output_path)
         out = fp.with_stem(fp.stem + '_processed')
     with out.open('w') as f:
-        json.dump(nb, f, indent=1)
+        json.dump(nb, f, indent=1) # Original notebooks had indent=1
+
+def get_hash_dict(input_dir: Any="./nj67-papers/original", output_path: Any="./notebook-hash-dict.json"):
+    "Get hash dictionary AFTER the metadata has been added in and with unmodified files"
+    res = {}
+    input_dir = Path(input_dir)
+    for d in input_dir.iterdir():
+        if not d.is_dir(): continue
+        for f in d.iterdir():
+            if not f.is_file(): continue
+            j = json.loads(f.read_text())
+            m: dict = j['metadata']['nj67']
+            h = m.pop('hash')
+            res[h] = m
+
+    with open(Path(output_path), 'w') as f:
+        json.dump(res, f, indent=2)
+
 
 # add_notebook_metadata("task_67.ipynb")
 # print(*proc_file("task_67_processed.ipynb"),sep='\n\n')
+# get_hash_dict()
