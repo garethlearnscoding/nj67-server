@@ -4,12 +4,23 @@ Collection of functions to parse ipynb
 """
 import hashlib
 import json
+from os import PathLike
 from pathlib import Path
 import re
 import sys
-from typing import Any
 
-def get_subtask_from_cell(cell: dict):
+type Filepath = str | PathLike[str] | Path
+"A filepath that can be converted to a Path object"
+type UnprocessedCodeCell = list[str] | str
+"Code cell in jupyter notebook that can be list or string"
+type CodeCell = str
+"A code cell in the jupyter notebook"
+type CodeCells = list[CodeCell] 
+"List of CodeCell (in string)"
+type FullPaper = list[CodeCells]
+"List of all tasks (with empty `CodeCells` representing missing subtasks)"
+
+def get_subtask_from_cell(cell: dict) -> int:
     """\
         Attempt to get the subtask number for the cell, returns 0 if not found
     """
@@ -36,7 +47,13 @@ def get_subtask_from_cell(cell: dict):
         return int(task_string.group(1))
     return 0
 
-def proc_file(file):
+def flatten_cell(cell: UnprocessedCodeCell) -> CodeCell:
+    "Flattens a cell from str or list of string into a single string"
+    if isinstance(cell, str):
+        return cell
+    return '\n'.join(cell)
+
+def proc_file(file: Filepath) -> CodeCells:
     "Return list of cells ordered by subtask, will raise Exceptions if missing too much metadata"
     with open(file) as f:
         nb = json.load(f)
@@ -45,13 +62,16 @@ def proc_file(file):
         task_no = nb['metadata']['nj67']['task_no']
     except KeyError:
         raise NotImplementedError(f"No metadata found in file: {file}")
-    all_cell_tuples = [(get_subtask_from_cell(cell), cell) 
-                    for cell in nb['cells'] if cell['cell_type'] == "code"]
+    all_cell_tuples: list[tuple[int, UnprocessedCodeCell]] = [
+        (get_subtask_from_cell(cell), cell) 
+        for cell in nb['cells'] 
+        if cell['cell_type'] == "code"
+    ]
     i = 1 # expected subtask of cell, subtassks are 1-indexed
-    ordered_cells = []
+    ordered_cells: CodeCells = []
     for cell_index, cell_tup in enumerate(all_cell_tuples):
         if cell_tup[0] == i:
-            ordered_cells.append(cell_tup[1])
+            ordered_cells.append(flatten_cell(cell_tup[1]))
             i += 1
             continue
         #Ambiguous ordering, will check till EOF or regular ordering found again
@@ -62,8 +82,8 @@ def proc_file(file):
                     print(f"Found extra code cell{'s' if j > 1 else ''} after Task {task_no}.{i-1}, ignoring...", file=sys.stderr)
                     break
                 elif all_cell_tuples[cell_index + j][0] == i + j:
-                    ordered_cells.append(cell_tup[1])
-                    print(f"Found code cell with missing metadata, ignoring...", file=sys.stderr)
+                    ordered_cells.append(flatten_cell(cell_tup[1]))
+                    print(f"Found code cell with missing task_no metadata, ignoring...", file=sys.stderr)
                     break
                 elif all_cell_tuples[cell_index + j][0] in range(i, i+j):
                     raise NotImplementedError(f"Found code cell(s) with missing metadata and ambigous ordering")
@@ -72,13 +92,13 @@ def proc_file(file):
         except IndexError: #End of cells
             print(i, j)
             if i + j - 1 == no_subtask:
-                ordered_cells.extend(map(lambda tup: tup[1], all_cell_tuples[i-1:]))
-                print("Found cell(s) with missing metadata until eof, ignoring...")
+                ordered_cells.extend(map(lambda tup: flatten_cell(tup[1]), all_cell_tuples[i-1:]))
+                print("Found cell(s) with missing task_no metadata until EOF, ignoring...")
                 break
-            raise NotImplementedError(f"Found code cell(s) with missing metadata and ambigous ordering")
+            raise NotImplementedError(f"Found code cell(s) with missing task_no metadata and ambigous ordering")
     return ordered_cells
 
-def add_notebook_metadata(filepath: Any, output_path:Any=None):
+def add_notebook_metadata(filepath: Filepath, output_path:Filepath|None=None) -> None:
     """\
     Add metadata of subtask number to code cells and task number to notebook itself
     
@@ -113,15 +133,18 @@ def add_notebook_metadata(filepath: Any, output_path:Any=None):
         cell['source'] = [f"# Task {task_no}.{i}", "# YOUR CODE HERE"]
     nb['metadata']['nj67']['no_subtask'] = i
     try:
-        out = Path(output_path)
+        out = Path(output_path) # type: ignore
     except TypeError:
         print(f"Invalid output path: ", output_path)
         out = fp.with_stem(fp.stem + '_processed')
     with out.open('w') as f:
         json.dump(nb, f, indent=1) # Original notebooks had indent=1
 
-def get_hash_dict(input_dir: Any="./nj67-papers/original", output_path: Any="./notebook-hash-dict.json"):
-    "Get hash dictionary AFTER the metadata has been added in and with unmodified files"
+def get_hash_dict(
+    input_dir:Filepath="./nj67-papers/original", 
+    output_path:Filepath="./notebook-hash-dict.json"
+) -> None:
+    "Get hash dictionary AFTER the metadata has been added in and with unmodified files and writes it to output_path"
     res = {}
     input_dir = Path(input_dir)
     for d in input_dir.iterdir():

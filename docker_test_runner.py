@@ -11,10 +11,7 @@ import json
 import shutil
 from pathlib import Path
 
-type CodeCells = list[str] 
-"List of code cells (in string)"
-type FullPaper = list[CodeCells]
-"List of all tasks (with empty `CodeCells` representing missing subtasks)"
+from notebook_parser import proc_file, FullPaper
 
 def test_paper_in_docker(full_paper: FullPaper, paper_name: str, timeout=10):
     """
